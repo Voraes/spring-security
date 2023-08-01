@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 public class RegistrationController {
 
     private final UserService userService;
 
-    private ApplicationEventPublisher publisher;
+    private final ApplicationEventPublisher publisher;
 
     public RegistrationController(UserService userService, ApplicationEventPublisher publisher) {
         this.userService = userService;
@@ -22,9 +24,17 @@ public class RegistrationController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@RequestBody UserModel userModel) {
+    public String registerUser(@RequestBody UserModel userModel, HttpServletRequest request) {
         User user = userService.registerUser(userModel);
-        publisher.publishEvent(new RegistrationCompleteEvent(user, "url"));
+        publisher.publishEvent(new RegistrationCompleteEvent(user, applicationUrl(request)));
         return "Registered";
+    }
+
+    private String applicationUrl(HttpServletRequest request) {
+        return "http://"
+                + request.getServerName()
+                + ":"
+                + request.getServerPort()
+                + request.getContextPath();
     }
 }
